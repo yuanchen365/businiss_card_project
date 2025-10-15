@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+  <form id="review-form" action="/apply" method="post">
+    <input type="hidden" name="total_items" value="{{ total_items }}" />
+    <input type="hidden" name="order" id="order-field" value="{{ order_json }}" />
+
+    <section class="card toolbar">
+      <h2>批次工具</h2>
+      <div class="toolbar-actions">
+        <button type="button" class="btn secondary" data-apply-all="company">將本卡公司套用到全部</button>
+        <button type="button" class="btn secondary" data-apply-all="title">將本卡職稱套用到全部</button>
+        <button type="button" class="btn secondary" data-apply-all="phones">將本卡電話套用到全部</button>
+        <button type="button" class="btn secondary" data-apply-all="emails">將本卡 Email 套用到全部</button>
+        <button type="button" class="btn secondary" data-apply-all="notes">將本卡備註套用到全部</button>
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" class="btn secondary" id="save-draft">儲存草稿</button>
+        <span class="hint" id="draft-status"></span>
+      </div>
+    </section>
+
+    {% for item in entries %}
+      <section class="grid review-block" data-index="{{ item.index }}">
+        <div class="card">
+          <div class="card-header">
+            <h2>名片 {{ loop.index }}：{{ item.filename }}</h2>
+            <div class="reorder-buttons">
+              <button type="button" class="btn tiny" data-move="up">上移</button>
+              <button type="button" class="btn tiny" data-move="down">下移</button>
+            </div>
+          </div>
+          <label class="skip-toggle">
+            <input type="checkbox" name="skip_{{ item.index }}" {% if item.skip %}checked{% endif %} />
+            <span>略過此名片（不寫入 Google）</span>
+          </label>
+          <p class="hint">此影像將同步為聯絡人照片。</p>
+          <pre class="ocr">{{ item.ocr }}</pre>
+        </div>
+        <div class="card">
+          <h2>解析與校正</h2>
+          <label>姓名（顯示）：<input type="text" class="field-fullName" name="fullName_{{ item.index }}" value="{{ item.data.name.fullName }}" /></label>
+          <label>名：<input type="text" class="field-givenName" name="givenName_{{ item.index }}" value="{{ item.data.name.givenName }}" /></label>
+          <label>姓：<input type="text" class="field-familyName" name="familyName_{{ item.index }}" value="{{ item.data.name.familyName }}" /></label>
+          <label>公司：<input type="text" class="field-company" name="company_{{ item.index }}" value="{{ item.data.organization.company }}" /><button type="button" class="btn tiny apply-this" data-field="company">套用到全部</button></label>
+          <label>職稱：<input type="text" class="field-title" name="title_{{ item.index }}" value="{{ item.data.organization.title }}" /><button type="button" class="btn tiny apply-this" data-field="title">套用到全部</button></label>
+          <label>電話（逗號分隔）：<input type="text" class="field-phones" name="phones_{{ item.index }}" value="{{ item.phones_str }}" /><button type="button" class="btn tiny apply-this" data-field="phones">套用到全部</button></label>
+          <label>Email（逗號分隔）：<input type="text" class="field-emails" name="emails_{{ item.index }}" value="{{ item.emails_str }}" /><button type="button" class="btn tiny apply-this" data-field="emails">套用到全部</button></label>
+          <label>地址（逗號分隔）：<input type="text" class="field-addresses" name="addresses_{{ item.index }}" value="{{ item.addresses_str }}" /><button type="button" class="btn tiny apply-this" data-field="addresses">套用到全部</button></label>
+          <label>網址（逗號分隔）：<input type="text" class="field-urls" name="urls_{{ item.index }}" value="{{ item.urls_str }}" /><button type="button" class="btn tiny apply-this" data-field="urls">套用到全部</button></label>
+          <label>備註：<textarea class="field-notes" name="notes_{{ item.index }}" rows="3">{{ item.data.notes }}</textarea><button type="button" class="btn tiny apply-this" data-field="notes">套用到全部</button></label>
+          {% if item.dedupe %}
+            <div class="tag">去重判定：{{ item.dedupe.action }}{% if item.dedupe.resourceName %} ({{ item.dedupe.resourceName }}){% endif %}</div>
+          {% endif %}
+        </div>
+      </section>
+    {% endfor %}
+
+    <section class="card actions">
+      <button type="submit">批次寫入 Google 通訊錄</button>
+    </section>
+  </form>
+
+  <script>
+    const formEl = document.getElementById('review-form');
+    const orderField = document.getElementById('order-field');
+    const draftStatus = document.getElementById('draft-status');
+
+    const updateOrderField = () => {
+      const indices = Array.from(document.querySelectorAll('.review-block')).map(block => block.dataset.index);
+      orderField.value = JSON.stringify(indices);
+      document.querySelectorAll('.review-block').forEach((block, idx) => {
+        const heading = block.querySelector('h2');
+        if (heading) {
+          heading.textContent = `名片 ${idx + 1}：${heading.textContent.split('：').slice(1).join('：')}`;
+        }
+      });
+    };
+
+    document.querySelectorAll('[data-move]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const block = btn.closest('.review-block');
+        if (!block) return;
+        if (btn.dataset.move === 'up' && block.previousElementSibling?.classList.contains('review-block')) {
+          block.parentNode.insertBefore(block, block.previousElementSibling);
+        }
+        if (btn.dataset.move === 'down' && block.nextElementSibling?.classList.contains('review-block')) {
+          block.parentNode.insertBefore(block.nextElementSibling, block);
+        }
+        updateOrderField();
+      });
+    });
+
+    const applyValueToAll = (sourceFieldClass, value) => {
+      document.querySelectorAll(`.${sourceFieldClass}`).forEach(input => {
+        if (input.tagName.toLowerCase() === 'textarea') {
+          input.value = value;
+        } else {
+          input.value = value;
+        }
+      });
+    };
+
+    document.querySelectorAll('.apply-this').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const field = btn.dataset.field;
+        const input = btn.previousElementSibling;
+        if (!input) return;
+        applyValueToAll(`field-${field}`, input.value);
+      });
+    });
+
+    document.querySelectorAll('[data-apply-all]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const field = btn.dataset.applyAll;
+        const firstBlock = document.querySelector('.review-block');
+        if (!firstBlock) return;
+        const input = firstBlock.querySelector(`.field-${field}`);
+        if (input) {
+          applyValueToAll(`field-${field}`, input.value);
+        }
+      });
+    });
+
+    const collectDraftPayload = () => {
+      const indices = JSON.parse(orderField.value || '[]');
+      const items = indices.map(idx => {
+        return {
+          index: idx,
+          skip: formEl.querySelector(`[name="skip_${idx}"]`)?.checked || false,
+          fullName: formEl.querySelector(`[name="fullName_${idx}"]`)?.value || '',
+          givenName: formEl.querySelector(`[name="givenName_${idx}"]`)?.value || '',
+          familyName: formEl.querySelector(`[name="familyName_${idx}"]`)?.value || '',
+          company: formEl.querySelector(`[name="company_${idx}"]`)?.value || '',
+          title: formEl.querySelector(`[name="title_${idx}"]`)?.value || '',
+          phones: formEl.querySelector(`[name="phones_${idx}"]`)?.value || '',
+          emails: formEl.querySelector(`[name="emails_${idx}"]`)?.value || '',
+          addresses: formEl.querySelector(`[name="addresses_${idx}"]`)?.value || '',
+          urls: formEl.querySelector(`[name="urls_${idx}"]`)?.value || '',
+          notes: formEl.querySelector(`[name="notes_${idx}"]`)?.value || ''
+        };
+      });
+      return { order: indices, items };
+    };
+
+    const saveDraft = async () => {
+      draftStatus.textContent = '儲存中...';
+      try {
+        const payload = collectDraftPayload();
+        const res = await fetch('/review/draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('儲存失敗');
+        draftStatus.textContent = '草稿已儲存';
+        setTimeout(() => (draftStatus.textContent = ''), 4000);
+      } catch (err) {
+        draftStatus.textContent = err.message;
+      }
+    };
+
+    document.getElementById('save-draft').addEventListener('click', saveDraft);
+
+    window.addEventListener('beforeunload', () => {
+      const payload = collectDraftPayload();
+      navigator.sendBeacon('/review/draft', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    });
+
+    updateOrderField();
+  </script>
+{% endblock %}

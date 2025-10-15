@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+  <section class="card">
+    <h2>結果</h2>
+    {% if results %}
+      {% for item in results %}
+        <div class="result-item">
+          <strong>名片 {{ item.index }}</strong>：動作 {{ item.action }}；狀態 {{ item.status }}
+          {% if item.filename %}<br />檔名：{{ item.filename }}{% endif %}
+          {% if item.resourceName %}<br />resourceName：{{ item.resourceName }}{% endif %}
+          {% if item.reason %}<br />原因：{{ item.reason }}{% endif %}
+          {% if item.photoStatus %}<br />照片：{{ item.photoStatus }}{% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>沒有任何結果。</p>
+    {% endif %}
+    <p><a class="btn" href="/logs/{{ csv_filename }}">下載 CSV 日誌</a></p>
+    <p><a href="/">返回首頁</a></p>
+  </section>
+{% endblock %}

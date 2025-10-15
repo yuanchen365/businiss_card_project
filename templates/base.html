@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title or '名片辨識 × Google 通訊錄' }}</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>名片辨識 × Google 通訊錄</h1>
+    <nav>
+      <a class="btn secondary" href="/billing">方案與額度</a>
+      {% if user_key %}
+      <span class="tag">已登入：{{ user_key }}</span>
+      <a class="btn" href="/auth/logout">登出</a>
+      {% else %}
+      <a class="btn" href="/auth/login">Google 登入</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <small>Scopes: {{ scopes or '' }}</small>
+  </footer>
+</body>
+</html>
+

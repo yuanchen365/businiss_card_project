@@ -1,0 +1,25 @@
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Node
+node_modules/
+dist/
+build/
+
+# Python
+venv/
+.venv/
+__pycache__/
+
+# IDE / Editor
+.idea/
+.vscode/
+
+# Logs & OS junk
+*.log
+Thumbs.db
+.DS_Store

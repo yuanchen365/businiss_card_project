@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+  <section class="card billing-summary">
+    <div class="summary-header">
+      <div>
+        <h2>方案與額度</h2>
+        <p class="summary-plan">目前方案：<strong>{{ plan }}</strong></p>
+        <p class="summary-plan-hint">{{ plan_hint }}</p>
+      </div>
+      <div class="summary-meta">
+        <div><span>帳號：</span>{{ user_key }}</div>
+        <div><span>剩餘額度：</span>{{ quota }}</div>
+        <div><span>最後更新：</span>{{ updated_at or '—' }}</div>
+      </div>
+    </div>
+    {% if status_message %}
+      <div class="status-banner {{ status_level or '' }}">{{ status_message }}</div>
+    {% endif %}
+  </section>
+
+  <section class="card billing-option">
+    <div class="option-text">
+      <h3>點數加值方案</h3>
+      <p>每個帳號享有 5 張免費試用額度。下方可選擇 5 美元倍數的點數包，購買後立即增加可用張數。</p>
+    </div>
+    <div class="option-actions wide">
+      {% if pack_options %}
+        <form action="/billing/checkout" method="post" class="pack-form">
+          <input type="hidden" name="product" value="credits" />
+          <div class="pack-options">
+            {% for option in pack_options %}
+            <label class="pack-option">
+              <input type="radio" name="tier" value="{{ option.index }}" {% if loop.first %}checked{% endif %}>
+              <span class="pack-price">{{ option.price_display }}</span>
+              <span class="pack-credits">{{ option.credits }} 張</span>
+            </label>
+            {% endfor %}
+          </div>
+          <button type="submit">前往 Stripe 結帳</button>
+        </form>
+      {% else %}
+        <div class="hint">尚未設定點數方案，請於環境變數中配置 `CREDIT_PACK_TIERS`。</div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if history %}
+  <section class="card">
+    <h3>最近交易紀錄</h3>
+    <ul class="history-list">
+      {% for item in history %}
+        <li>
+          <span class="history-time">{{ item.timestamp }}</span>
+          <span class="history-note">
+            {% if item.note %}{{ item.note }}{% else %}{{ item.action }}{% endif %}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <p><a href="/">返回首頁</a></p>
+{% endblock %}

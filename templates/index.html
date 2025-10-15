@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <section class="card">
+    <h2>上傳名片影像</h2>
+    {% if upload_disabled %}
+      <p class="hint">請先登入 Google 帳號後，再使用名片辨識功能。</p>
+      <a class="btn" href="/auth/login">前往登入</a>
+    {% else %}
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="files" accept="image/png,image/jpeg,application/pdf" multiple required />
+        <p class="hint">單張限制 10MB，支援 JPG / PNG / PDF（僅取首頁）；一次最多上傳 5 張。</p>
+        <button type="submit">開始辨識</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h3>使用說明</h3>
+    <ul>
+      <li>登入後上傳名片影像，系統會自動 OCR、解析欄位並帶出去重建議。</li>
+      <li>在審核頁可調整欄位、拖曳排序、略過單張或儲存草稿。</li>
+      <li>提交後將寫入 Google 通訊錄，並同步名片影像為聯絡人照片。</li>
+      <li>若額度不足，可前往「方案與額度」頁面訂閱或購買點數。</li>
+    </ul>
+  </section>
+{% endblock %}
+

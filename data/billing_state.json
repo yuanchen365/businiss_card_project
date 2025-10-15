@@ -1,0 +1,69 @@
+{
+  "me": {
+    "quota": 0,
+    "plan": null,
+    "stripe_customer_id": null,
+    "updated_at": "2025-10-09T13:53:04"
+  },
+  "richman365@gmail.com": {
+    "quota": 145,
+    "plan": null,
+    "stripe_customer_id": "cus_TCll3zsA9653mr",
+    "updated_at": "2025-10-14T16:02:22",
+    "history": [
+      {
+        "timestamp": "2025-10-14T16:02:22",
+        "action": "quota_used",
+        "amount": 1,
+        "note": "使用 1 張名片，剩餘 145 張。"
+      },
+      {
+        "timestamp": "2025-10-14T16:02:19",
+        "action": "quota_used",
+        "amount": 1,
+        "note": "使用 1 張名片，剩餘 146 張。"
+      },
+      {
+        "timestamp": "2025-10-14T16:02:13",
+        "action": "quota_used",
+        "amount": 1,
+        "note": "使用 1 張名片，剩餘 147 張。"
+      },
+      {
+        "timestamp": "2025-10-14T16:02:08",
+        "action": "quota_used",
+        "amount": 1,
+        "note": "使用 1 張名片，剩餘 148 張。"
+      },
+      {
+        "timestamp": "2025-10-14T16:02:04",
+        "action": "quota_used",
+        "amount": 1,
+        "note": "使用 1 張名片，剩餘 149 張。"
+      },
+      {
+        "timestamp": "2025-10-14T15:56:38",
+        "action": "quota_added",
+        "amount": 100,
+        "note": "Stripe 結帳成功，增加 100 張（session cs_test_a1qKAgH25rnTALqhffaCuzI3FzYf56esHVBpjfz2INfwdIM1TqicvaYJoX）"
+      },
+      {
+        "timestamp": "2025-10-14T15:55:57",
+        "action": "quota_added",
+        "amount": 50,
+        "note": "Stripe 結帳成功，增加 50 張（session cs_test_a1h2ke1wVo3cpVguSIxp1XqRKeJewxLqQG9edank0a36ckXt1GGVwyP0en）"
+      },
+      {
+        "timestamp": "2025-10-09T16:44:04",
+        "action": "quota_add_skipped",
+        "amount": 50,
+        "note": "已為無限制方案，未調整額度。"
+      }
+    ],
+    "free_trial": false,
+    "processed_sessions": [
+      "cs_test_a1qKAgH25rnTALqhffaCuzI3FzYf56esHVBpjfz2INfwdIM1TqicvaYJoX",
+      "cs_test_a1h2ke1wVo3cpVguSIxp1XqRKeJewxLqQG9edank0a36ckXt1GGVwyP0en"
+    ]
+  }
+}
