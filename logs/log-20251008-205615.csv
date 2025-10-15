@@ -1,2 +1,0 @@
-action,reason,status,timestamp
-update,"<HttpError 400 when requesting https://people.googleapis.com/v1/people/c2416445890544350613:updateContact?updatePersonFields=addresses%2Cbiographies%2CemailAddresses%2Cnames%2Corganizations%2CphoneNumbers&alt=json returned ""Request must set person.etag or person.metadata.sources.etag for the source that is being updated."". Details: ""Request must set person.etag or person.metadata.sources.etag for the source that is being updated."">",failed,2025-10-08T20:56:20

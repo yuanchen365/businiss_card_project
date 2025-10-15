@@ -15,3 +15,7 @@ uploads/
 logs/
 .tokens/
 data/
+
+# Do not include local env files in images
+.env
+.env.*

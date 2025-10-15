@@ -1,6 +1,0 @@
-action,filename,index,photoStatus,reason,resourceName,status,timestamp
-update,IMG_4327.JPG,1,照片未更新,,people/c363871626710992976,success,2025-10-09T17:32:53
-update,IMG_4331.JPG,2,照片未更新,,people/c1005795703595563696,success,2025-10-09T17:32:56
-update,IMG_4332.JPG,3,照片未更新,,people/c8883384163154592320,success,2025-10-09T17:33:00
-update,IMG_4334.JPG,4,,"<HttpError 400 when requesting https://people.googleapis.com/v1/people/c8883384163154592320:updateContact?updatePersonFields=addresses%2Cbiographies%2CemailAddresses%2Cnames%2Corganizations%2CphoneNumbers%2Curls&alt=json returned ""Request person.etag is different than the current person.etag. Clear local cache and get the latest person."". Details: ""Request person.etag is different than the current person.etag. Clear local cache and get the latest person."">",,failed,2025-10-09T17:33:01
-create,IMG_4335.JPG,5,照片未更新,,people/c3774431426847177665,success,2025-10-09T17:33:05

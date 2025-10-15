@@ -23,3 +23,10 @@ __pycache__/
 *.log
 Thumbs.db
 .DS_Store
+
+# Runtime data (do not commit)
+uploads/
+logs/
+.tokens/
+data/
+session_payloads/
