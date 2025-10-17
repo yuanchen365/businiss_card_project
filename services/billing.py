@@ -7,6 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+
+def _log(message: str) -> None:
+    print(f"[billing] {message}")
+
 try:  # Optional dependency for production persistence
     from google.cloud import firestore  # type: ignore
 except Exception:  # pragma: no cover - local/dev without Firestore
@@ -26,19 +30,28 @@ _PACK_TIERS: List[Dict[str, int]] = []
 FIRESTORE_COLLECTION = (os.getenv("FIRESTORE_COLLECTION") or "").strip()
 _USE_FIRESTORE = bool(FIRESTORE_COLLECTION and firestore is not None)
 _fs_client = None
+_firestore_init_logged = False
 
 MutationResult = Tuple[Dict[str, Any], Any, bool]
 
 
 def _firestore_client():
     global _fs_client
+    global _firestore_init_logged
     if not _USE_FIRESTORE:
+        if not _firestore_init_logged:
+            _log("Firestore disabled (FIRESTORE_COLLECTION missing or library not available)")
+            _firestore_init_logged = True
         return None
     if _fs_client is None:
         try:
             _fs_client = firestore.Client()  # type: ignore[arg-type]
+            _log(f"Firestore client initialized; collection='{FIRESTORE_COLLECTION}'")
         except Exception:  # pragma: no cover - fallback to local JSON store
+            _log("Failed to initialize Firestore client; falling back to local JSON store")
             _fs_client = None
+        finally:
+            _firestore_init_logged = True
     return _fs_client
 
 
@@ -49,6 +62,7 @@ def _doc_ref(user_key: str):
     try:
         return client.collection(FIRESTORE_COLLECTION).document(user_key)  # type: ignore[attr-defined]
     except Exception:  # pragma: no cover
+        _log(f"Failed to get Firestore document reference for user '{user_key}'")
         return None
 
 
@@ -107,10 +121,12 @@ def _new_customer(user_key: str) -> Dict[str, Any]:
 
 def _fs_mutation(user_key: str, mutator: Callable[[Dict[str, Any], bool], MutationResult]) -> Optional[Any]:
     if not _USE_FIRESTORE:
+        _log("Firestore not configured; using local JSON store")
         return None
     doc = _doc_ref(user_key)
     client = _firestore_client()
     if doc is None or client is None or firestore is None:
+        _log("Firestore client unavailable; using local JSON store")
         return None
 
     transaction = client.transaction()
@@ -128,7 +144,8 @@ def _fs_mutation(user_key: str, mutator: Callable[[Dict[str, Any], bool], Mutati
 
     try:
         return txn(transaction, doc)
-    except Exception:  # pragma: no cover - surface fallback
+    except Exception as exc:  # pragma: no cover - surface fallback
+        _log(f"Firestore transaction failed for user '{user_key}': {exc}")
         return None
 
 
@@ -156,6 +173,7 @@ def ensure_customer(user_key: str) -> Dict[str, Any]:
     if isinstance(fs_result, dict):
         return fs_result
 
+    _log(f"Using local billing store for user '{user_key}'")
     with _lock:
         state = _load_state()
         customer = state.get(user_key)
@@ -215,6 +233,7 @@ def add_quota(user_key: str, amount: int, action_note: Optional[str] = None) -> 
     if isinstance(fs_result, dict):
         return fs_result
 
+    _log(f"Using local billing store for user '{user_key}' (add_quota)")
     ensure_customer(user_key)
     with _lock:
         state = _load_state()
@@ -238,6 +257,7 @@ def add_history(user_key: str, action: str, note: str) -> Dict[str, Any]:
     if isinstance(fs_result, dict):
         return fs_result
 
+    _log(f"Using local billing store for user '{user_key}' (add_history)")
     ensure_customer(user_key)
     with _lock:
         state = _load_state()
@@ -270,6 +290,7 @@ def deduct_quota(user_key: str, amount: int = 1) -> bool:
     if isinstance(fs_result, bool):
         return fs_result
 
+    _log(f"Using local billing store for user '{user_key}' (deduct_quota fallback)")
     ensure_customer(user_key)
     with _lock:
         state = _load_state()
@@ -301,6 +322,7 @@ def update_customer(user_key: str, **fields: Any) -> Dict[str, Any]:
     if isinstance(fs_result, dict):
         return fs_result
 
+    _log(f"Using local billing store for user '{user_key}' (update_customer)")
     ensure_customer(user_key)
     with _lock:
         state = _load_state()
@@ -368,6 +390,7 @@ def mark_session_processed(user_key: str, session_id: Optional[str]) -> Dict[str
     if isinstance(fs_result, dict):
         return fs_result
 
+    _log(f"Using local billing store for user '{user_key}' (mark_session_processed)")
     ensure_customer(user_key)
     with _lock:
         state = _load_state()
