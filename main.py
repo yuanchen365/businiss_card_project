@@ -241,7 +241,7 @@ async def auth_callback(request: Request):
                 token_file.unlink(missing_ok=True)
             request.session.clear()
             request.session["flash_error"] = "Google 授權已更新，請重新登入一次。"
-            print("[auth_callback] scope changed, cleared tokens")
+            print(f"[auth_callback] scope changed, cleared tokens: {exc}")
             return RedirectResponse("/", status_code=303)
         request.session["flash_error"] = f"OAuth 回呼失敗：{exc}"
         return RedirectResponse("/")
