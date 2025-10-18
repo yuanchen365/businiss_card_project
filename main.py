@@ -189,8 +189,8 @@ async def auth_callback(request: Request):
 
         flow = get_google_flow(state=stored_state)
 
-        url = URL(str(request.url)).replace(scheme="http")
-        flow.fetch_token(authorization_response=str(url))
+        # Use the original HTTPS callback URL to avoid redirect_uri or scope issues
+        flow.fetch_token(authorization_response=str(request.url))
         request.session.pop("oauth_state", None)
         creds = flow.credentials
 
