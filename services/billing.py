@@ -120,32 +120,30 @@ def _new_customer(user_key: str) -> Dict[str, Any]:
 
 
 def _fs_mutation(user_key: str, mutator: Callable[[Dict[str, Any], bool], MutationResult]) -> Optional[Any]:
+    """Apply a mutation on a user's billing document in Firestore (non-transactional).
+    If Firestore 不可用或發生錯誤，回傳 None 讓呼叫端走本地檔案備援。
+    目前使用非交易寫入，避免 Cloud Run/Firestore 交易初始化問題導致 'no transaction ID' 例外。
+    """
     if not _USE_FIRESTORE:
         _log("Firestore not configured; using local JSON store")
         return None
     doc = _doc_ref(user_key)
     client = _firestore_client()
-    if doc is None or client is None or firestore is None:
+    if doc is None or client is None:
         _log("Firestore client unavailable; using local JSON store")
         return None
 
-    transaction = client.transaction()
-
-    @firestore.transactional  # type: ignore[attr-defined]
-    def txn(transaction, doc_ref):  # type: ignore[no-redef]
-        snapshot = doc_ref.get(transaction=transaction)
-        created = not snapshot.exists
-        data = snapshot.to_dict() if snapshot.exists else _new_customer(user_key)
-        new_data, result, changed = mutator(data or {}, created)  # type: ignore[arg-type]
+    try:
+        snap = doc.get()
+        created = not snap.exists
+        data = snap.to_dict() if snap.exists else _new_customer(user_key)
+        new_data, result, changed = mutator(data or {}, created)
         if created or changed:
             new_data["updated_at"] = datetime.utcnow().isoformat(timespec="seconds")
-            transaction.set(doc_ref, new_data)
+            doc.set(new_data)
         return result if result is not None else new_data
-
-    try:
-        return txn(transaction, doc)
-    except Exception as exc:  # pragma: no cover - surface fallback
-        _log(f"Firestore transaction failed for user '{user_key}': {exc}")
+    except Exception as exc:
+        _log(f"Firestore write failed for user '{user_key}': {exc}")
         return None
 
 
