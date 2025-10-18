@@ -27,6 +27,9 @@ from google.auth.transport import requests as google_requests
 
 load_dotenv()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+# Some providers may return equivalent but different scope strings (e.g. profile vs userinfo.profile).
+# Relax scope checking to avoid spurious "scope has changed" errors during OAuth callback.
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 if (
     os.getenv("OAUTHLIB_INSECURE_TRANSPORT") != "1"
     and (
